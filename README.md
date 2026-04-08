@@ -96,6 +96,115 @@ The core focus of this project is the expense tracking functionality and SPA beh
 
 ---
 
+## How to Run the Application
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/oeindrilabairagi/expense-tracker.git
+cd expense-tracker
+```
+
+---
+
+### 2. Setup
+
+#### 2.1 Set Up the Database (MySQL)
+
+Open MySQL Workbench or your MySQL terminal and run the `db_setup.sql` file located in the root directory.
+
+This will:
+- Create a database named `expense_tracker_db`
+- Create the `expenses` table
+- Add a `created_at` timestamp column
+
+---
+
+#### 2.2 Configure Database Connection
+
+In `Server/server.js`, ensure your MySQL credentials match your local setup:
+
+```javascript
+host: 'localhost',
+user: 'root',
+password: 'root123',
+database: 'expense_tracker_db'
+```
+
+You can either:
+- Use the same credentials in your MySQL setup, or  
+- Modify these values in `server.js` to match your local configuration
+
+---
+
+#### 2.3 Install Backend Dependencies
+
+```bash
+cd Server
+npm install
+```
+
+---
+
+#### 2.4 Install Frontend Dependencies
+
+Open a new terminal and run:
+
+```bash
+cd Client
+npm install
+```
+
+---
+
+### 3. Run the Application
+
+#### 3.1 Start the Backend Server
+
+```bash
+cd Server
+npm run dev
+```
+
+The backend server will run on:
+
+```
+http://localhost:5000
+```
+
+---
+
+#### 3.2 Start the Frontend
+
+Open a new terminal and run:
+
+```bash
+cd Client
+npm run dev
+```
+
+Vite will provide a local development URL, typically:
+
+```
+http://localhost:5173
+```
+
+Open this in your browser.
+
+---
+
+### 4. Important Note
+
+The frontend communicates with the backend via:
+
+```
+http://localhost:5000/expenses
+```
+
+Ensure that **both the frontend and backend servers are running simultaneously** for the application to function correctly.
+
+---
+
 ## Challenges & Solutions
 
 One of the main challenges was managing complex UI state within a single-page application, especially with multiple modals (add, edit, delete, trends, login). This was addressed using structured state management with React hooks.
@@ -113,6 +222,30 @@ Design consistency and layout responsiveness were also challenging due to multip
 * Introduce budget tracking and alerts
 * Improve accessibility (keyboard navigation, ARIA labels)
 * Optimise component structure by separating into reusable components
+
+---
+
+## Screenshots
+
+### Login
+![Login](/Assignment%201/screenshots/2026-04-08_23h03_01.png)
+
+### Dashboard
+![Dashboard](/Assignment%201/screenshots/2026-04-08_23h03_18.png)
+![Dashboard](/Assignment%201/screenshots/2026-04-08_23h03_27.png)
+
+### Add New Expense
+![Add New Expense](/Assignment%201/screenshots/2026-04-08_23h03_56.png)
+
+### View, Edit and Delete Expense
+![View, Edit and Delete Expense](/Assignment%201/screenshots/2026-04-08_23h04_05.png)
+
+### Monthly View of Spending Trend
+![Monthly View of Spending Trend](/Assignment%201/screenshots/2026-04-08_23h04_29.png)
+![Monthly View of Spending Trend](/Assignment%201/screenshots/2026-04-08_23h04_33.png)
+
+### Yearly View of Spending Trend
+![Yearly View of Spending Trend](/Assignment%201/screenshots/2026-04-08_23h04_46.png)
 
 ---
 
