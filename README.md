@@ -43,6 +43,19 @@ The application addresses the common problem of lack of visibility into personal
 * Interactive UI with modals and hover effects
 * Responsive layout for different screen sizes
 
+
+## Authentication Note (Assignment Scope)
+
+The login and signup interfaces are implemented primarily for UI demonstration purposes and to support overall application flow.
+
+Basic validation is included:
+- Fields cannot be left empty (login & signup)
+- Password and confirm password must match (signup)
+
+However, full authentication logic (e.g., secure user verification, password hashing, session management, and database-backed user accounts) has not been implemented, as it was not a requirement of the assignment. 
+
+The core focus of this project is the expense tracking functionality and SPA behaviour.
+
 ---
 
 ## Application Logic & Workflow
