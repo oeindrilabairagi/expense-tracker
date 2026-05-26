@@ -13,6 +13,15 @@ CREATE TABLE IF NOT EXISTS expenses (
 ALTER TABLE expenses
 ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(100) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  role ENUM('user', 'admin') DEFAULT 'user',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- INSERT INTO expenses (title, category, amount, expense_date, description)
 -- VALUES
 -- ('Dinner', 'Food', 120.00, '2026-04-06', 'Dinner with friend'),
