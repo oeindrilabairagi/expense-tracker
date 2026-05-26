@@ -3,6 +3,7 @@ import "./App.css";
 import Header from "./components/Header";
 import LoginModal from "./components/LoginModal";
 import DeleteConfirmModal from "./components/DeleteConfirmModal";
+import ExpenseFormModal from "./components/ExpenseFormModal";
 import {
   PieChart,
   Pie,
@@ -929,92 +930,19 @@ export default function App() {
           handleAuthSubmit={handleAuthSubmit}
         />
       )}
-
+      
       {showAddModal && (
-        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="expense-modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Add New Expense</h2>
-
-            <form onSubmit={handleAddExpenseSubmit}>
-              <label>Title</label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
-              />
-              {errors.title && <p className="error-text">{errors.title}</p>}
-
-              <label>Category</label>
-              <select
-                value={formData.category}
-                onChange={(e) =>
-                  setFormData({ ...formData, category: e.target.value })
-                }
-              >
-                <option value="">Select category</option>
-                <option>Food</option>
-                <option>Transport</option>
-                <option>Shopping</option>
-                <option>Bills</option>
-                <option>Other</option>
-              </select>
-              {errors.category && <p className="error-text">{errors.category}</p>}
-
-              <label>Amount</label>
-              <input
-                type="number"
-                value={formData.amount}
-                onChange={(e) =>
-                  setFormData({ ...formData, amount: e.target.value })
-                }
-              />
-              {errors.amount && <p className="error-text">{errors.amount}</p>}
-
-              <label>Date</label>
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) =>
-                  setFormData({ ...formData, date: e.target.value })
-                }
-              />
-              {errors.date && <p className="error-text">{errors.date}</p>}
-
-              <label>Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-              />
-              {errors.description && (
-                <p className="error-text">{errors.description}</p>
-              )}
-
-              <div className="modal-buttons">
-                <button className="submit-btn">Submit</button>
-
-                <button
-                  type="button"
-                  className="cancel-btn"
-                  onClick={resetExpenseForm}
-                >
-                  Reset
-                </button>
-
-                <button
-                  type="button"
-                  className="cancel-btn"
-                  onClick={() => setShowAddModal(false)}
-                >
-                  Close
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <ExpenseFormModal
+          title="Add New Expense"
+          formData={formData}
+          setFormData={setFormData}
+          errors={errors}
+          handleSubmit={handleAddExpenseSubmit}
+          resetExpenseForm={resetExpenseForm}
+          closeModal={() => setShowAddModal(false)}
+          submitText="Submit"
+          showResetButton={true}
+        />
       )}
 
       {showViewModal && (
@@ -1212,86 +1140,19 @@ export default function App() {
       )}
 
       {showEditModal && (
-        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
-          <div className="expense-modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Edit Expense</h2>
-
-            <form onSubmit={handleEditExpenseSubmit}>
-              <label>Title</label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
-              />
-              {errors.title && <p className="error-text">{errors.title}</p>}
-
-              <label>Category</label>
-              <select
-                value={formData.category}
-                onChange={(e) =>
-                  setFormData({ ...formData, category: e.target.value })
-                }
-              >
-                <option value="">Select category</option>
-                <option>Food</option>
-                <option>Transport</option>
-                <option>Shopping</option>
-                <option>Bills</option>
-                <option>Other</option>
-              </select>
-              {errors.category && <p className="error-text">{errors.category}</p>}
-
-              <label>Amount</label>
-              <input
-                type="number"
-                value={formData.amount}
-                onChange={(e) =>
-                  setFormData({ ...formData, amount: e.target.value })
-                }
-              />
-              {errors.amount && <p className="error-text">{errors.amount}</p>}
-
-              <label>Date</label>
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) =>
-                  setFormData({ ...formData, date: e.target.value })
-                }
-              />
-              {errors.date && <p className="error-text">{errors.date}</p>}
-
-              <label>Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-              />
-              {errors.description && (
-                <p className="error-text">{errors.description}</p>
-              )}
-
-              <div className="modal-buttons">
-                <button type="submit" className="submit-btn">
-                  Save Changes
-                </button>
-
-                <button
-                  type="button"
-                  className="cancel-btn"
-                  onClick={() => setShowEditModal(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <ExpenseFormModal
+          title="Edit Expense"
+          formData={formData}
+          setFormData={setFormData}
+          errors={errors}
+          handleSubmit={handleEditExpenseSubmit}
+          resetExpenseForm={resetExpenseForm}
+          closeModal={() => setShowEditModal(false)}
+          submitText="Save Changes"
+          showResetButton={false}
+        />
       )}
-
+      
       {showDeleteModal && expenseToDelete && (
         <DeleteConfirmModal
           expenseToDelete={expenseToDelete}
