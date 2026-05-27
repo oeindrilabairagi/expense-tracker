@@ -282,5 +282,7 @@ API and database failure states are handled with user-friendly error messages an
 
 # Author
 
+This project was completed individually for Assignment 2.
+
 Developed by **Oeindrila Bairagi (25544685)**  
 32516 - Internet Programming
