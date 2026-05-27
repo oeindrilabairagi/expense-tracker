@@ -36,6 +36,7 @@ import {
   getPeakTrendItem,
   getYearlyTrendData,
 } from "./utils/expenseAnalytics";
+import AdminPanelModal from "./components/AdminPanelModal";
 
 export default function App() {
   // ====================
@@ -50,6 +51,7 @@ export default function App() {
   const [tempPassword, setTempPassword] = useState("");
   const [tempConfirmPassword, setTempConfirmPassword] = useState("");
   const [authErrors, setAuthErrors] = useState({});
+  const [currentUser, setCurrentUser] = useState(null);
 
   // ====================
   // Expense Form + CRUD State
@@ -59,6 +61,7 @@ export default function App() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -197,6 +200,7 @@ const handleAuthSubmit = async (e) => {
     localStorage.setItem("user", JSON.stringify(data.user));
 
     setUsername(data.user.username);
+    setCurrentUser(data.user);
     setIsLoggedIn(true);
     setShowLoginModal(false);
     setTempUsername("");
@@ -229,6 +233,7 @@ const handleLogout = async () => {
 
   setIsLoggedIn(false);
   setUsername("User");
+  setCurrentUser(null);
   setExpenses([]);
   setSelectedExpense(null);
   setExpenseToDelete(null);
@@ -304,6 +309,20 @@ const handleLogout = async () => {
     setErrors({});
     setShowEditModal(true);
   };
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+
+    if (storedToken && storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+
+      setIsLoggedIn(true);
+      setUsername(parsedUser.username);
+      setCurrentUser(parsedUser);
+      setShowLoginModal(false);
+    }
+  }, []);
 
   const handleEditExpenseSubmit = async (e) => {
     e.preventDefault();
@@ -447,6 +466,32 @@ const latestYearMonth =
       />
 
       <main className="dashboard">
+        {currentUser?.role === "admin" && (
+          <>
+            <div className="admin-banner">
+              <div className="admin-banner-left">
+                <div className="admin-icon">🛡️</div>
+
+                <div>
+                  <h3>Admin Controls</h3>
+                  <p>
+                    Manage users and monitor system activities.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                className="admin-panel-btn"
+                onClick={() => setShowAdminPanel(true)}
+              >
+                Open Admin Panel
+              </button>
+            </div>
+
+            <div className="admin-divider"></div>
+          </>
+        )}
+
         <div className="action-grid">
           <div className="action-card" onClick={() => setShowAddModal(true)}>
             <div className="card-icon">➕</div>
@@ -586,6 +631,10 @@ const latestYearMonth =
           yearlyCategoryBreakdown={yearlyCategoryBreakdown}
           COLORS={COLORS}
         />
+      )}
+      
+      {showAdminPanel && (
+        <AdminPanelModal setShowAdminPanel={setShowAdminPanel} />
       )}
 
     </div>
