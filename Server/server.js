@@ -33,6 +33,20 @@ app.post("/register", async (req, res) => {
     return res.status(400).json({ error: "Username, email, and password are required." });
   }
 
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailPattern.test(email)) {
+    return res.status(400).json({ error: "Please enter a valid email address." });
+  }
+
+  if (username.trim().length < 3) {
+    return res.status(400).json({ error: "Username must be at least 3 characters." });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ error: "Password must be at least 6 characters." });
+  }
+
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -65,6 +79,12 @@ app.post("/login", (req, res) => {
 
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required." });
+  }
+
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailPattern.test(email)) {
+    return res.status(400).json({ error: "Please enter a valid email address." });
   }
 
   const sql = `
