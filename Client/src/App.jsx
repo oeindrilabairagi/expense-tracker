@@ -37,6 +37,7 @@ import {
   getYearlyTrendData,
 } from "./utils/expenseAnalytics";
 import AdminPanelModal from "./components/AdminPanelModal";
+import UserProfileModal from "./components/UserProfileModal";
 
 export default function App() {
   // ====================
@@ -62,6 +63,7 @@ export default function App() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -462,6 +464,7 @@ const latestYearMonth =
         username={username}
         setAuthMode={setAuthMode}
         setShowLoginModal={setShowLoginModal}
+        setShowProfileModal={setShowProfileModal}
         handleLogout={handleLogout}
       />
 
@@ -632,10 +635,18 @@ const latestYearMonth =
           COLORS={COLORS}
         />
       )}
-      
+
       {showAdminPanel && (
         <AdminPanelModal setShowAdminPanel={setShowAdminPanel} />
       )}
+
+      {showProfileModal && (
+        <UserProfileModal
+          setShowProfileModal={setShowProfileModal}
+          setUsername={setUsername}
+          setCurrentUser={setCurrentUser}
+        />
+              )}
 
     </div>
   );

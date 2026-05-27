@@ -3,6 +3,7 @@ export default function Header({
   username,
   setAuthMode,
   setShowLoginModal,
+  setShowProfileModal,
   handleLogout,
 }) {
   return (
@@ -31,12 +32,22 @@ export default function Header({
             Login
           </button>
         ) : (
-          <div className="user-card">
-            <p>Welcome, {username}</p>
+         <div className="user-card">
+          <p>Welcome, {username}</p>
+
+          <div className="user-actions">
+            <button
+              className="profile-btn"
+              onClick={() => setShowProfileModal(true)}
+            >
+              Profile
+            </button>
+
             <button className="logout-btn" onClick={handleLogout}>
               Logout
             </button>
           </div>
+        </div>
         )}
       </div>
     </header>
