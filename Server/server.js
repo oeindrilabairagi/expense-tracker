@@ -26,6 +26,37 @@ db.connect((err) => {
   console.log("Connected to MySQL!");
 });
 
+function logActivity(userId, actionType, description) {
+  const sql = `
+    INSERT INTO user_activity (user_id, action_type, description)
+    VALUES (?, ?, ?)
+  `;
+
+  db.query(sql, [userId, actionType, description], (err) => {
+    if (err) {
+      console.error("Activity log error:", err);
+    }
+  });
+}
+
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ error: "Access token required." });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: "Invalid or expired token." });
+    }
+
+    req.user = user;
+    next();
+  });
+}
+
 app.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -122,6 +153,8 @@ app.post("/login", (req, res) => {
       { expiresIn: "2h" }
     );
 
+    logActivity(user.id, "LOGIN", `${user.username} logged in.`);
+
     res.json({
       message: "Login successful.",
       token,
@@ -135,19 +168,35 @@ app.post("/login", (req, res) => {
   });
 });
 
-app.post("/expenses", (req, res) => {
-  const { title, category, amount, date, description } = req.body;
+app.post("/logout", (req, res) => {
+  const { userId, username } = req.body;
+
+  if (userId && username) {
+    logActivity(userId, "LOGOUT", `${username} logged out.`);
+  }
+
+  res.json({ message: "Logout successful." });
+});
+
+app.post("/expenses", authenticateToken, (req, res) => {
+  const { title, category, amount, date, description, user_id } = req.body;
 
   const sql = `
-    INSERT INTO expenses (title, category, amount, expense_date, description)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO expenses (title, category, amount, expense_date, description, user_id)
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
 
-  db.query(sql, [title, category, amount, date, description], (err, result) => {
+  db.query(sql, [title, category, amount, date, description, req.user.id], (err, result) => {
     if (err) {
       console.error("Insert error:", err);
       return res.status(500).json({ error: "Failed to save expense." });
     }
+
+    logActivity(
+      req.user.id,
+      "CREATE_EXPENSE",
+      `${req.user.username} created expense: ${title}`
+    );
 
     res.status(201).json({
       message: "Expense added successfully.",
@@ -156,14 +205,15 @@ app.post("/expenses", (req, res) => {
   });
 });
 
-app.get("/expenses", (req, res) => {
+app.get("/expenses", authenticateToken, (req, res) => {
   const sql = `
     SELECT id, title, category, amount, expense_date, description, created_at
     FROM expenses
+    WHERE user_id = ?
     ORDER BY created_at DESC, id DESC
   `;
 
-  db.query(sql, (err, results) => {
+  db.query(sql, [req.user.id], (err, results) => {
     if (err) {
       console.error("Fetch error:", err);
       return res.status(500).json({ error: "Failed to fetch expenses." });
@@ -173,38 +223,93 @@ app.get("/expenses", (req, res) => {
   });
 });
 
-app.put("/expenses/:id", (req, res) => {
+app.put("/expenses/:id", authenticateToken, (req, res) => {
   const { id } = req.params;
   const { title, category, amount, date, description } = req.body;
 
-  const sql = `
-    UPDATE expenses
-    SET title = ?, category = ?, amount = ?, expense_date = ?, description = ?
-    WHERE id = ?
-  `;
+  const selectSql = "SELECT * FROM expenses WHERE id = ? AND user_id = ?";
 
-  db.query(sql, [title, category, amount, date, description, id], (err, result) => {
-    if (err) {
-      console.error("Update error:", err);
-      return res.status(500).json({ error: "Failed to update expense." });
+  db.query(selectSql, [id, req.user.id], (selectErr, oldResults) => {
+    if (selectErr) {
+      console.error("Select old expense error:", selectErr);
+      return res.status(500).json({ error: "Failed to find expense." });
     }
 
-    res.json({ message: "Expense updated successfully." });
+    if (oldResults.length === 0) {
+      return res.status(404).json({ error: "Expense not found." });
+    }
+
+    const oldExpense = oldResults[0];
+
+    const sql = `
+      UPDATE expenses
+      SET title = ?, category = ?, amount = ?, expense_date = ?, description = ?
+      WHERE id = ? AND user_id = ?
+    `;
+
+    db.query(
+      sql,
+      [title, category, amount, date, description, id, req.user.id],
+      (err, result) => {
+        if (err) {
+          console.error("Update error:", err);
+          return res.status(500).json({ error: "Failed to update expense." });
+        }
+
+        const changes = [];
+
+        if (oldExpense.title !== title) changes.push("title");
+        if (oldExpense.category !== category) changes.push("category");
+        if (Number(oldExpense.amount) !== Number(amount)) changes.push("amount");
+        if (oldExpense.description !== description) changes.push("description");
+
+        logActivity(
+          req.user.id,
+          "UPDATE_EXPENSE",
+          `${req.user.username} updated expense: ${title}. Changed: ${
+            changes.length ? changes.join(", ") : "no major fields"
+          }`
+        );
+
+        res.json({ message: "Expense updated successfully." });
+      }
+    );
   });
 });
 
-app.delete("/expenses/:id", (req, res) => {
+app.delete("/expenses/:id", authenticateToken, (req, res) => {
   const { id } = req.params;
 
-  const sql = `DELETE FROM expenses WHERE id = ?`;
+  const selectSql = "SELECT * FROM expenses WHERE id = ? AND user_id = ?";
 
-  db.query(sql, [id], (err, result) => {
-    if (err) {
-      console.error("Delete error:", err);
-      return res.status(500).json({ error: "Failed to delete expense." });
+  db.query(selectSql, [id, req.user.id], (selectErr, results) => {
+    if (selectErr) {
+      console.error("Select delete expense error:", selectErr);
+      return res.status(500).json({ error: "Failed to find expense." });
     }
 
-    res.json({ message: "Expense deleted successfully." });
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Expense not found." });
+    }
+
+    const deletedExpense = results[0];
+
+    const deleteSql = "DELETE FROM expenses WHERE id = ? AND user_id = ?";
+
+    db.query(deleteSql, [id, req.user.id], (err, result) => {
+      if (err) {
+        console.error("Delete error:", err);
+        return res.status(500).json({ error: "Failed to delete expense." });
+      }
+
+      logActivity(
+        req.user.id,
+        "DELETE_EXPENSE",
+        `${req.user.username} deleted expense: ${deletedExpense.title}`
+      );
+
+      res.json({ message: "Expense deleted successfully." });
+    });
   });
 });
 
