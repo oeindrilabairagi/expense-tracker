@@ -22,6 +22,27 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS user_activity (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT,
+  action_type VARCHAR(50) NOT NULL,
+  description VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+ALTER TABLE expenses
+ADD COLUMN user_id INT NULL;
+
+ALTER TABLE expenses
+ADD CONSTRAINT fk_expenses_user
+FOREIGN KEY (user_id) REFERENCES users(id)
+ON DELETE CASCADE;
+
+UPDATE users
+SET role = 'admin'
+WHERE email = 'admin@test.com';
+
 -- INSERT INTO expenses (title, category, amount, expense_date, description)
 -- VALUES
 -- ('Dinner', 'Food', 120.00, '2026-04-06', 'Dinner with friend'),
@@ -29,3 +50,5 @@ CREATE TABLE IF NOT EXISTS users (
 -- ('Groceries', 'Food', 80.00, '2026-04-04', 'Weekly groceries');
 
 select * from expenses;
+select * from users;
+select * from user_activity;
