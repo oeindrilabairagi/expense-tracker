@@ -819,6 +819,12 @@ body {
   display: flex;
   gap: 16px;
   margin-bottom: 20px;
+  justify-content: flex-start;
+}
+
+.trend-controls .filter-group {
+  max-width: 280px;
+  flex: 0 0 280px;
 }
 
 .trend-content-row {

@@ -120,8 +120,16 @@ export default function DashboardSummary({
             <p>{errorMessage}</p>
             <button onClick={fetchExpenses}>Retry</button>
           </div>
-        ) : dailyTrendData.length === 0 ? (
-          <p>No data for {currentMonthKey} yet.</p>
+       ) : dailyTrendData.length === 0 ? (
+          <>
+            <p>No data for {currentMonthKey} yet.</p>
+
+            <div className="summary-hint-wrap">
+              <span className="summary-hint-badge">
+                Click to view more trends
+              </span>
+            </div>
+          </>
         ) : (
           <>
             <p className="trend-subtitle">For {currentMonthDisplay}</p>

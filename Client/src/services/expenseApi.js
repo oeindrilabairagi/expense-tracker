@@ -1,7 +1,18 @@
 const API_BASE_URL = "http://localhost:5000";
 
+function getAuthHeaders() {
+  const token = localStorage.getItem("token");
+
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+}
+
 export async function getExpenses() {
-  const response = await fetch(`${API_BASE_URL}/expenses`);
+  const response = await fetch(`${API_BASE_URL}/expenses`, {
+    headers: getAuthHeaders(),
+  });
   const data = await response.json();
 
   if (!response.ok) {
@@ -14,9 +25,7 @@ export async function getExpenses() {
 export async function createExpense(formData) {
   const response = await fetch(`${API_BASE_URL}/expenses`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify(formData),
   });
 
@@ -32,9 +41,7 @@ export async function createExpense(formData) {
 export async function updateExpense(id, formData) {
   const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify(formData),
   });
 
@@ -50,6 +57,7 @@ export async function updateExpense(id, formData) {
 export async function deleteExpense(id) {
   const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
     method: "DELETE",
+    headers: getAuthHeaders(),
   });
 
   const data = await response.json();

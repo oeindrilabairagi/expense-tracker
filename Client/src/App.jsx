@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import { registerUser, loginUser } from "./services/authApi";
+import {
+  registerUser,
+  loginUser,
+  logoutUser,
+} from "./services/authApi";
 import Header from "./components/Header";
 import LoginModal from "./components/LoginModal";
 import DeleteConfirmModal from "./components/DeleteConfirmModal";
@@ -206,11 +210,35 @@ const handleAuthSubmit = async (e) => {
   }
 };
 
-const handleLogout = () => {
+const handleLogout = async () => {
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+
+  if (storedUser) {
+    try {
+      await logoutUser({
+        userId: storedUser.id,
+        username: storedUser.username,
+      });
+    } catch (error) {
+      console.error("Logout logging failed:", error);
+    }
+  }
+
   localStorage.removeItem("token");
   localStorage.removeItem("user");
+
   setIsLoggedIn(false);
   setUsername("User");
+  setExpenses([]);
+  setSelectedExpense(null);
+  setExpenseToDelete(null);
+  setShowAddModal(false);
+  setShowViewModal(false);
+  setShowDetailModal(false);
+  setShowEditModal(false);
+  setShowDeleteModal(false);
+  setShowTrendModal(false);
+  setErrorMessage("");
   setAuthMode("login");
   setShowLoginModal(true);
 };
@@ -352,7 +380,12 @@ const {
 const availableMonthKeys = getAvailableMonthKeys(expenses, parseMonthKey);
 
 useEffect(() => {
-  if (!selectedTrendMonth && availableMonthKeys.length > 0) {
+  if (availableMonthKeys.length === 0) {
+    setSelectedTrendMonth("");
+    return;
+  }
+
+  if (!selectedTrendMonth || !availableMonthKeys.includes(selectedTrendMonth)) {
     setSelectedTrendMonth(
       availableMonthKeys.includes(currentMonthKey)
         ? currentMonthKey

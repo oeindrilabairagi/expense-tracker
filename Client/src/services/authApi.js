@@ -35,3 +35,15 @@ export async function loginUser(userData) {
 
   return data;
 }
+
+export async function logoutUser(userData) {
+  const response = await fetch(`${API_BASE_URL}/logout`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(userData),
+  });
+
+  return response.json();
+}
