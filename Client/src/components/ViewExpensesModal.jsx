@@ -4,6 +4,8 @@ export default function ViewExpensesModal({
   setSelectedCategory,
   sortOption,
   setSortOption,
+  searchTerm,
+  setSearchTerm,
   loadingExpenses,
   errorMessage,
   fetchExpenses,
@@ -27,45 +29,60 @@ export default function ViewExpensesModal({
         </div>
 
         <div className="filter-sort-bar">
-          <div className="filter-group">
-            <label>Category</label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
-              <option value="All">All</option>
-              <option value="Food">Food</option>
-              <option value="Transport">Transport</option>
-              <option value="Shopping">Shopping</option>
-              <option value="Bills">Bills</option>
-              <option value="Other">Other</option>
-            </select>
+          <div className="search-row">
+            <div className="filter-group">
+              <label>Search</label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by title, category, or description"
+              />
+            </div>
           </div>
+          
+          <div className="filter-bottom-row">
+            <div className="filter-group">
+              <label>Category</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+              >
+                <option value="All">All</option>
+                <option value="Food">Food</option>
+                <option value="Transport">Transport</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Bills">Bills</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
 
-          <div className="filter-group">
-            <label>Sort By</label>
-            <select
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value)}
+            <div className="filter-group">
+              <label>Sort By</label>
+              <select
+                value={sortOption}
+                onChange={(e) => setSortOption(e.target.value)}
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="highest">Highest Amount</option>
+                <option value="lowest">Lowest Amount</option>
+              </select>
+            </div>
+
+            <button
+              type="button"
+              className="cancel-btn"
+              onClick={() => {
+                setSelectedCategory("All");
+                setSortOption("newest");
+                setSearchTerm("");
+              }}
             >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="highest">Highest Amount</option>
-              <option value="lowest">Lowest Amount</option>
-            </select>
-          </div>
-
-          <button
-            type="button"
-            className="cancel-btn"
-            onClick={() => {
-              setSelectedCategory("All");
-              setSortOption("newest");
-            }}
-          >
-            Clear
-          </button>
+              Clear
+            </button>
         </div>
+      </div>
 
         {loadingExpenses ? (
           <p className="empty-text">Loading expenses...</p>

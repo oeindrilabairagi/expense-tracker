@@ -1,8 +1,24 @@
-export function getDisplayedExpenses(expenses, selectedCategory, sortOption) {
+export function getDisplayedExpenses(
+  expenses,
+  selectedCategory,
+  sortOption,
+  searchTerm
+) {
   return expenses
     .filter((expense) => {
       if (selectedCategory === "All") return true;
       return expense.category === selectedCategory;
+    })
+    .filter((expense) => {
+      const searchValue = searchTerm.toLowerCase();
+
+      if (!searchValue) return true;
+
+      return (
+        expense.title?.toLowerCase().includes(searchValue) ||
+        expense.category?.toLowerCase().includes(searchValue) ||
+        expense.description?.toLowerCase().includes(searchValue)
+      );
     })
     .sort((a, b) => {
       if (sortOption === "newest") {

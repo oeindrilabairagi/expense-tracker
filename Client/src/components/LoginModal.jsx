@@ -3,11 +3,14 @@ export default function LoginModal({
   setAuthMode,
   tempUsername,
   setTempUsername,
+  tempEmail,
+  setTempEmail,
   tempPassword,
   setTempPassword,
   tempConfirmPassword,
   setTempConfirmPassword,
   handleAuthSubmit,
+  authErrors,
 }) {
   return (
     <div className="modal-overlay auth-overlay">
@@ -42,13 +45,32 @@ export default function LoginModal({
         </h2>
 
         <form onSubmit={handleAuthSubmit} className="auth-form">
-          <label>Username</label>
+          {authMode === "signup" && (
+            <>
+              <label>Display Name</label>
+              <input
+                type="text"
+                value={tempUsername}
+                onChange={(e) => setTempUsername(e.target.value)}
+                placeholder="Enter display name"
+              />
+              <p className="helper-text">
+                This name will be shown on your profile and can be changed later.
+              </p>
+              {authErrors.username && (
+                <p className="error-text">{authErrors.username}</p>
+              )}
+            </>
+          )}
+
+          <label>Email</label>
           <input
-            type="text"
-            value={tempUsername}
-            onChange={(e) => setTempUsername(e.target.value)}
-            placeholder="Enter username"
+            type="email"
+            value={tempEmail}
+            onChange={(e) => setTempEmail(e.target.value)}
+            placeholder="Enter email"
           />
+          {authErrors.email && <p className="error-text">{authErrors.email}</p>}
 
           <label>Password</label>
           <input
@@ -57,6 +79,7 @@ export default function LoginModal({
             onChange={(e) => setTempPassword(e.target.value)}
             placeholder="Enter password"
           />
+          {authErrors.password && <p className="error-text">{authErrors.password}</p>}
 
           {authMode === "signup" && (
             <>
@@ -67,6 +90,9 @@ export default function LoginModal({
                 onChange={(e) => setTempConfirmPassword(e.target.value)}
                 placeholder="Confirm password"
               />
+              {authErrors.confirmPassword && (
+                <p className="error-text">{authErrors.confirmPassword}</p>
+              )}
             </>
           )}
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
+import { registerUser, loginUser } from "./services/authApi";
 import Header from "./components/Header";
 import LoginModal from "./components/LoginModal";
 import DeleteConfirmModal from "./components/DeleteConfirmModal";
@@ -41,8 +42,10 @@ export default function App() {
   const [username, setUsername] = useState("User");
   const [authMode, setAuthMode] = useState("login");
   const [tempUsername, setTempUsername] = useState("");
+  const [tempEmail, setTempEmail] = useState("");
   const [tempPassword, setTempPassword] = useState("");
   const [tempConfirmPassword, setTempConfirmPassword] = useState("");
+  const [authErrors, setAuthErrors] = useState({});
 
   // ====================
   // Expense Form + CRUD State
@@ -74,6 +77,7 @@ export default function App() {
   // ====================
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortOption, setSortOption] = useState("newest");
+  const [searchTerm, setSearchTerm] = useState("");
 
   // ====================
   // Trend / Analytics State
@@ -129,41 +133,88 @@ export default function App() {
   // ====================
   // Authentication Handlers
   // ====================
-  const handleAuthSubmit = (e) => {
-    e.preventDefault();
+   // ====================
+// Authentication Handlers
+// ====================
+const handleAuthSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!tempUsername.trim() || !tempPassword.trim()) {
-      alert("Please enter both username and password.");
+  const newAuthErrors = {};
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!tempEmail.trim()) {
+    newAuthErrors.email = "Email is required.";
+  } else if (!emailPattern.test(tempEmail.trim())) {
+    newAuthErrors.email = "Please enter a valid email address.";
+  }
+
+  if (!tempPassword.trim()) {
+    newAuthErrors.password = "Password is required.";
+  } else if (tempPassword.length < 6) {
+    newAuthErrors.password = "Password must be at least 6 characters.";
+  }
+
+  if (authMode === "signup") {
+    if (!tempConfirmPassword.trim()) {
+      newAuthErrors.confirmPassword = "Please confirm your password.";
+    } else if (tempPassword !== tempConfirmPassword) {
+      newAuthErrors.confirmPassword = "Passwords do not match.";
+    }
+  }
+
+  setAuthErrors(newAuthErrors);
+
+  if (Object.keys(newAuthErrors).length > 0) return;
+
+  try {
+    if (authMode === "signup") {
+      await registerUser({
+        username: tempUsername,
+        email: tempEmail,
+        password: tempPassword,
+      });
+
+      alert("Account created successfully. Please log in.");
+      setAuthMode("login");
+      setTempUsername("");
+      setTempEmail("");
+      setTempPassword("");
+      setTempConfirmPassword("");
+      setAuthErrors({});
       return;
     }
 
-    if (authMode === "signup") {
-      if (!tempConfirmPassword.trim()) {
-        alert("Please confirm your password.");
-        return;
-      }
+    const data = await loginUser({
+      email: tempEmail,
+      password: tempPassword,
+    });
 
-      if (tempPassword !== tempConfirmPassword) {
-        alert("Passwords do not match.");
-        return;
-      }
-    }
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
 
-    setUsername(tempUsername);
+    setUsername(data.user.username);
     setIsLoggedIn(true);
     setShowLoginModal(false);
     setTempUsername("");
+    setTempEmail("");
     setTempPassword("");
     setTempConfirmPassword("");
-  };
+    setAuthErrors({});
+  } catch (error) {
+    console.error("Authentication error:", error);
+    alert(error.message || "Authentication failed.");
+  }
+};
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUsername("User");
-    setAuthMode("login");
-    setShowLoginModal(true);
-  };
-
+const handleLogout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  setIsLoggedIn(false);
+  setUsername("User");
+  setAuthMode("login");
+  setShowLoginModal(true);
+};
+  
   // ====================
   // Fetch / Load Data
   // ====================
@@ -272,7 +323,8 @@ export default function App() {
 const displayedExpenses = getDisplayedExpenses(
   expenses,
   selectedCategory,
-  sortOption
+  sortOption,
+  searchTerm
 );
 
 const {
@@ -407,11 +459,14 @@ const latestYearMonth =
           setAuthMode={setAuthMode}
           tempUsername={tempUsername}
           setTempUsername={setTempUsername}
+          tempEmail={tempEmail}
+          setTempEmail={setTempEmail}
           tempPassword={tempPassword}
           setTempPassword={setTempPassword}
           tempConfirmPassword={tempConfirmPassword}
           setTempConfirmPassword={setTempConfirmPassword}
           handleAuthSubmit={handleAuthSubmit}
+          authErrors={authErrors}
         />
       )}
       
@@ -436,6 +491,8 @@ const latestYearMonth =
           setSelectedCategory={setSelectedCategory}
           sortOption={sortOption}
           setSortOption={setSortOption}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
           loadingExpenses={loadingExpenses}
           errorMessage={errorMessage}
           fetchExpenses={fetchExpenses}
