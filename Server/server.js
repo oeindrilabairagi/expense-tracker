@@ -57,6 +57,14 @@ function authenticateToken(req, res, next) {
   });
 }
 
+function authorizeAdmin(req, res, next) {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Admin access required." });
+  }
+
+  next();
+}
+
 app.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -310,6 +318,67 @@ app.delete("/expenses/:id", authenticateToken, (req, res) => {
 
       res.json({ message: "Expense deleted successfully." });
     });
+  });
+});
+
+app.get("/admin/users", authenticateToken, authorizeAdmin, (req, res) => {
+  const sql = `
+    SELECT id, username, email, role, created_at
+    FROM users
+    ORDER BY created_at DESC
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Fetch users error:", err);
+      return res.status(500).json({ error: "Failed to fetch users." });
+    }
+
+    res.json(results);
+  });
+});
+
+app.get("/admin/activity", authenticateToken, authorizeAdmin, (req, res) => {
+  const sql = `
+    SELECT 
+      user_activity.id,
+      user_activity.user_id,
+      users.username,
+      users.email,
+      user_activity.action_type,
+      user_activity.description,
+      user_activity.created_at
+    FROM user_activity
+    LEFT JOIN users ON user_activity.user_id = users.id
+    ORDER BY user_activity.created_at DESC
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Fetch activity error:", err);
+      return res.status(500).json({ error: "Failed to fetch activity logs." });
+    }
+
+    res.json(results);
+  });
+});
+
+app.delete("/admin/users/:id", authenticateToken, authorizeAdmin, (req, res) => {
+  const { id } = req.params;
+
+  if (Number(id) === Number(req.user.id)) {
+    return res.status(400).json({ error: "You cannot delete your own admin account." });
+  }
+
+  const sql = "DELETE FROM users WHERE id = ?";
+
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error("Delete user error:", err);
+      return res.status(500).json({ error: "Failed to delete user." });
+    }
+
+    res.json({ message: "User deleted successfully." });
   });
 });
 
