@@ -1,8 +1,12 @@
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 const app = express();
+const JWT_SECRET = process.env.JWT_SECRET || "temporary_secret_key";
 
 app.use(cors());
 app.use(express.json());
@@ -20,6 +24,95 @@ db.connect((err) => {
     return;
   }
   console.log("Connected to MySQL!");
+});
+
+app.post("/register", async (req, res) => {
+  const { username, email, password } = req.body;
+
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: "Username, email, and password are required." });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const sql = `
+      INSERT INTO users (username, email, password_hash, role)
+      VALUES (?, ?, ?, ?)
+    `;
+
+    db.query(sql, [username, email, hashedPassword, "user"], (err, result) => {
+      if (err) {
+        console.error("Register error:", err);
+
+        if (err.code === "ER_DUP_ENTRY") {
+          return res.status(409).json({ error: "Email already exists." });
+        }
+
+        return res.status(500).json({ error: "Failed to register user." });
+      }
+
+      res.status(201).json({ message: "User registered successfully." });
+    });
+  } catch (error) {
+    console.error("Hashing error:", error);
+    res.status(500).json({ error: "Registration failed." });
+  }
+});
+
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required." });
+  }
+
+  const sql = `
+    SELECT id, username, email, password_hash, role
+    FROM users
+    WHERE email = ?
+  `;
+
+  db.query(sql, [email], async (err, results) => {
+    if (err) {
+      console.error("Login error:", err);
+      return res.status(500).json({ error: "Login failed." });
+    }
+
+    if (results.length === 0) {
+      return res.status(401).json({ error: "Invalid email or password." });
+    }
+
+    const user = results[0];
+
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "Invalid email or password." });
+    }
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      },
+      JWT_SECRET,
+      { expiresIn: "2h" }
+    );
+
+    res.json({
+      message: "Login successful.",
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  });
 });
 
 app.post("/expenses", (req, res) => {
