@@ -382,6 +382,138 @@ app.delete("/admin/users/:id", authenticateToken, authorizeAdmin, (req, res) => 
   });
 });
 
+app.get("/profile", authenticateToken, (req, res) => {
+  const sql = `
+    SELECT id, username, email, role, created_at
+    FROM users
+    WHERE id = ?
+  `;
+
+  db.query(sql, [req.user.id], (err, results) => {
+    if (err) {
+      console.error("Profile fetch error:", err);
+      return res.status(500).json({ error: "Failed to fetch profile." });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    res.json(results[0]);
+  });
+});
+
+app.put("/profile", authenticateToken, (req, res) => {
+  const { username, email } = req.body;
+
+  if (!username || !email) {
+    return res.status(400).json({
+      error: "Display name and email are required.",
+    });
+  }
+
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailPattern.test(email)) {
+    return res.status(400).json({
+      error: "Please enter a valid email address.",
+    });
+  }
+
+  if (username.trim().length < 3) {
+    return res.status(400).json({
+      error: "Display name must be at least 3 characters.",
+    });
+  }
+
+  const sql = `
+    UPDATE users
+    SET username = ?, email = ?
+    WHERE id = ?
+  `;
+
+  db.query(sql, [username, email, req.user.id], (err) => {
+    if (err) {
+      console.error("Profile update error:", err);
+
+      if (err.code === "ER_DUP_ENTRY") {
+        return res.status(409).json({ error: "Email already exists." });
+      }
+
+      return res.status(500).json({ error: "Failed to update profile." });
+    }
+
+    res.json({
+      message: "Profile updated successfully.",
+      user: {
+        id: req.user.id,
+        username,
+        email,
+        role: req.user.role,
+      },
+    });
+  });
+});
+
+app.put("/profile/password", authenticateToken, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({
+      error: "Current password and new password are required.",
+    });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({
+      error: "New password must be at least 6 characters.",
+    });
+  }
+
+  const selectSql = `
+    SELECT password_hash
+    FROM users
+    WHERE id = ?
+  `;
+
+  db.query(selectSql, [req.user.id], async (err, results) => {
+    if (err) {
+      console.error("Password fetch error:", err);
+      return res.status(500).json({ error: "Failed to verify password." });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    const passwordMatch = await bcrypt.compare(
+      currentPassword,
+      results[0].password_hash
+    );
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "Current password is incorrect." });
+    }
+
+    const newHashedPassword = await bcrypt.hash(newPassword, 10);
+
+    const updateSql = `
+      UPDATE users
+      SET password_hash = ?
+      WHERE id = ?
+    `;
+
+    db.query(updateSql, [newHashedPassword, req.user.id], (updateErr) => {
+      if (updateErr) {
+        console.error("Password update error:", updateErr);
+        return res.status(500).json({ error: "Failed to update password." });
+      }
+
+      res.json({ message: "Password updated successfully." });
+    });
+  });
+});
+
 app.listen(5000, () => {
   console.log("Server running on port 5000");
 });
